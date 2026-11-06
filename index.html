@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Світло · графік відключень</title>
+<meta name="description" content="Веб-версія Світла: графік відключень ДТЕК за адресою на сьогодні.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="page">
+  <header class="header">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none"><path d="M13 2 4.5 13.5H10l-1 8.5L19.5 10H14l-1-8Z" fill="currentColor"/></svg>
+      </div>
+      <div>
+        <h1>Світло</h1>
+        <div class="address" id="address">Оберіть адресу</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="addressBtn" type="button" title="Обрати адресу" aria-label="Обрати адресу">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 21s7-6.4 7-12a7 7 0 1 0-14 0c0 5.6 7 12 7 12Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <circle cx="12" cy="9" r="2.2" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" type="button" title="Оновити" aria-label="Оновити">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 12a8 8 0 1 1-2.34-5.66" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M20 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="status-card" id="statusCard">
+    <div class="status-main">
+      <div class="status-dot" id="statusDot"></div>
+      <div>
+        <h2 id="statusTitle">Завантаження…</h2>
+        <p id="statusSub">Отримуємо графік ДТЕК</p>
+        <p class="status-note hidden" id="statusNote"></p>
+      </div>
+    </div>
+    <div class="countdown" id="countdown">--:--</div>
+    <div class="countdown-label" id="countdownLabel"></div>
+  </section>
+
+  <div class="warning hidden" id="warning"></div>
+
+  <section class="actions">
+    <button class="btn" id="notifyBtn" type="button">Увімкнути сповіщення</button>
+    <button class="btn btn-ghost hidden" id="testBtn" type="button">Перевірити</button>
+    <span class="hint" id="notifyHint">Сповіщення можна налаштувати нижче</span>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Сповіщення</h2>
+    </div>
+    <div class="setting-row">
+      <label for="beforeOff">До відключення</label>
+      <select id="beforeOff" class="select"></select>
+    </div>
+    <div class="setting-row">
+      <label for="beforeOn">До включення</label>
+      <select id="beforeOn" class="select"></select>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Відключення сьогодні</h2>
+      <span class="chip" id="groupChip">—</span>
+    </div>
+    <div id="windows" class="windows">
+      <div class="empty">Завантажуємо…</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Сьогодні, 00:00–24:00</h2>
+      <div class="legend"><span class="lg lg-on"></span>є<span class="lg lg-off"></span>немає</div>
+    </div>
+    <div class="timeline" id="timeline"></div>
+    <div class="timeline-labels" id="timelineLabels"></div>
+  </section>
+
+  <footer class="footer">
+    <span id="updated">Дані ще не завантажені</span>
+    <span id="source">Джерело: ДТЕК Київські електромережі</span>
+  </footer>
+</main>
+
+<div class="modal hidden" id="addressModal" role="dialog" aria-modal="true" aria-labelledby="addressTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2 id="addressTitle">Обрати адресу</h2>
+      <button class="icon-btn" id="addressClose" type="button" aria-label="Закрити">×</button>
+    </div>
+    <p class="modal-sub">Введи вулицю та будинок. Чергу ДТЕК визначимо автоматично.</p>
+    <label class="field-label" for="addressStreet">Вулиця</label>
+    <div class="field-wrap">
+      <input id="addressStreet" class="input" autocomplete="off" spellcheck="false" placeholder="Почніть вводити вулицю">
+      <div class="suggest hidden" id="streetSuggest" role="listbox"></div>
+    </div>
+    <label class="field-label" for="addressHouse">Будинок</label>
+    <div class="field-wrap">
+      <input id="addressHouse" class="input" autocomplete="off" spellcheck="false" placeholder="Спочатку вибери вулицю" disabled>
+      <div class="suggest hidden" id="houseSuggest" role="listbox"></div>
+    </div>
+    <label class="field-label" for="addressGroupSelect">Черга відключень</label>
+    <div class="group-result" id="addressGroup">визначається автоматично</div>
+    <select id="addressGroupSelect" class="select group-select hidden" aria-label="Черга відключень"></select>
+    <p class="hint" id="addressStatus">Завантажуємо список вулиць…</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="addressCancel" type="button">Скасувати</button>
+      <button class="btn" id="addressSave" type="button" disabled>Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<noscript>Для роботи потрібен JavaScript.</noscript>
+<script src="streets.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
